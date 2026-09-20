@@ -1,0 +1,39 @@
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Méthode non autorisée. Utilisez POST.' });
+  }
+
+  try {
+    const { prompt } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({ error: 'La clé API GEMINI_API_KEY n\'est pas configurée dans les variables d\'environnement Vercel.' });
+    }
+
+    const systemPrompt = `Tu es un professeur expert en pédagogie mathématique. L'utilisateur te donne un exercice ou un problème de maths.
+Ta mission est de lui fournir une réponse structurée présentant TOUTES les méthodes de résolution possibles :
+1. **Méthode 1 (L'approche algébrique classique)** : Étape par étape.
+2. **Méthode 2 (L'astuce / Approche alternative)** : Si elle existe (changement de variable, symétrie, etc.).
+3. **Interprétation Graphique / Géométrique** : Ce que cela signifie visuellement.
+4. **Les pièges fréquents des étudiants**.
+Formate ta réponse en HTML clair (utilisant <h4 class="font-bold text-blue-400 mt-4 text-base">, <ul>, <p>, etc.) et avec de la notation LaTeX standard $...$ ou $$...$$.`;
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+    const apiResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] }
+      })
+    });
+
+    const data = await apiResponse.json();
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ error: error.message || 'Erreur serveur lors de la connexion avec Gemini' });
+  }
+}
+https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKeyhttps://cdn.tailwindcss.com
